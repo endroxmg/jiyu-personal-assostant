@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="theme-color" content="#09090b" />
   <meta name="description" content="Jiyu — Your Personal AI Assistant. Warm, smart, and always here for you." />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="index.css" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -21,18 +21,28 @@
 
 <body>
 
+  <!-- ============ AMBIENT BACKGROUND ============ -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grain-overlay"></div>
+  </div>
+
   <!-- ============ LOGIN SCREEN ============ -->
   <div id="login-screen" class="screen active">
     <div class="login-container">
-      <div class="login-glow"></div>
       <div class="login-card">
         <div class="login-brand">
+          <div class="logo-mark">
+            <span class="logo-letter">J</span>
+          </div>
           <h1 class="jiyu-logo">Jiyu</h1>
-          <p class="login-tagline">Your AI best friend — always here for you ✨</p>
+          <p class="login-tagline">Your AI companion</p>
         </div>
         <div class="login-actions">
           <div id="google-signin-btn" class="google-btn" style="display:none;">
-            <svg width="20" height="20" viewBox="0 0 48 48">
+            <svg width="18" height="18" viewBox="0 0 48 48">
               <path fill="#EA4335"
                 d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
               <path fill="#4285F4"
@@ -42,101 +52,192 @@
               <path fill="#34A853"
                 d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
             </svg>
-            <span>Sign in with Google</span>
+            <span>Continue with Google</span>
           </div>
           <button id="guest-btn" class="guest-btn">
-            <span>Continue as Guest</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <span>Get started</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </button>
         </div>
+        <p class="login-footer">Free to use · No account required</p>
       </div>
     </div>
   </div>
 
   <!-- ============ MAIN CHAT SCREEN ============ -->
   <div id="chat-screen" class="screen">
-    <!-- Header -->
-    <header id="app-header">
-      <div class="header-left">
-        <h1 class="jiyu-logo-sm">Jiyu</h1>
-        <span class="status-dot"></span>
-        <span class="status-text">Online</span>
-      </div>
-      <div class="header-right">
-        <button id="voice-toggle-btn" class="icon-btn" title="Toggle voice responses">
-          <svg id="voice-on-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <path d="M11 5L6 9H2v6h4l5 4V5z" />
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-          </svg>
-          <svg id="voice-off-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" style="display:none">
-            <path d="M11 5L6 9H2v6h4l5 4V5z" />
-            <line x1="23" y1="9" x2="17" y2="15" />
-            <line x1="17" y1="9" x2="23" y2="15" />
+    <!-- Sidebar (minimal) -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <div class="logo-mark-sm"><span>J</span></div>
+          <span class="sidebar-brand">Jiyu</span>
+        </div>
+        <button id="new-chat-btn" class="sidebar-action-btn" title="New chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <path d="M12 5v14M5 12h14" />
           </svg>
         </button>
-        <button id="settings-btn" class="icon-btn" title="Settings">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      </div>
+      <div class="sidebar-body">
+        <p class="sidebar-hint">Your conversations will appear here</p>
+      </div>
+      <div class="sidebar-footer">
+        <button id="settings-btn" class="sidebar-footer-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <circle cx="12" cy="12" r="3" />
             <path
               d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
+          <span>Settings</span>
         </button>
-        <button id="signout-btn" class="icon-btn" title="Sign out" style="display:none">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="signout-btn" class="sidebar-footer-btn" style="display:none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
+          <span>Sign out</span>
         </button>
       </div>
-    </header>
+    </aside>
 
-    <!-- Chat Messages -->
-    <main id="chat-container">
-      <div id="messages"></div>
-      <div id="typing-indicator" class="typing-indicator" style="display:none">
-        <div class="typing-avatar">J</div>
-        <div class="typing-dots">
-          <span></span><span></span><span></span>
+    <!-- Main chat area -->
+    <div class="chat-main">
+      <!-- Top bar -->
+      <nav class="topbar">
+        <button id="sidebar-toggle" class="topbar-btn" title="Toggle sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="15" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <div class="topbar-center">
+          <span class="topbar-model">Jiyu</span>
         </div>
-      </div>
-    </main>
+        <div class="topbar-right">
+          <button id="voice-toggle-btn" class="topbar-btn" title="Toggle voice">
+            <svg id="voice-on-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M11 5L6 9H2v6h4l5 4V5z" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+            </svg>
+            <svg id="voice-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" style="display:none">
+              <path d="M11 5L6 9H2v6h4l5 4V5z" />
+              <line x1="23" y1="9" x2="17" y2="15" />
+              <line x1="17" y1="9" x2="23" y2="15" />
+            </svg>
+          </button>
+        </div>
+      </nav>
 
-    <!-- Input Bar -->
-    <footer id="input-bar">
-      <div class="input-wrapper">
-        <textarea id="user-input" placeholder="Talk to Jiyu..." rows="1"></textarea>
-        <button id="mic-btn" class="mic-btn" title="Voice input">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <line x1="12" y1="19" x2="12" y2="23" />
-            <line x1="8" y1="23" x2="16" y2="23" />
-          </svg>
-        </button>
-        <button id="send-btn" class="send-btn" title="Send message">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-          </svg>
-        </button>
-      </div>
-    </footer>
+      <!-- Chat Messages -->
+      <main id="chat-container">
+        <!-- Welcome state (shown when no messages) -->
+        <div id="welcome-state" class="welcome-state">
+          <div class="welcome-logo-mark"><span>J</span></div>
+          <h2 class="welcome-title">How can I help you today?</h2>
+          <div class="suggestions">
+            <button class="suggestion-chip" data-msg="Tell me something interesting about the universe">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <path
+                  d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+              <span>Tell me something interesting</span>
+            </button>
+            <button class="suggestion-chip" data-msg="Help me brainstorm ideas for a creative project">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span>Help me brainstorm ideas</span>
+            </button>
+            <button class="suggestion-chip" data-msg="What's a good movie to watch tonight?">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+                <line x1="7" y1="2" x2="7" y2="22" />
+                <line x1="17" y1="2" x2="17" y2="22" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <line x1="2" y1="7" x2="7" y2="7" />
+                <line x1="2" y1="17" x2="7" y2="17" />
+                <line x1="17" y1="17" x2="22" y2="17" />
+                <line x1="17" y1="7" x2="22" y2="7" />
+              </svg>
+              <span>Movie recommendation</span>
+            </button>
+            <button class="suggestion-chip" data-msg="I need help writing something">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              <span>Help me write something</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="messages"></div>
+        <div id="typing-indicator" class="typing-indicator" style="display:none">
+          <div class="typing-content">
+            <div class="typing-icon">
+              <div class="typing-pulse"></div>
+            </div>
+            <span class="typing-text">Jiyu is thinking</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- Input Bar -->
+      <footer id="input-bar">
+        <div class="input-container">
+          <div class="input-wrapper">
+            <textarea id="user-input" placeholder="Message Jiyu..." rows="1"></textarea>
+            <div class="input-actions">
+              <button id="mic-btn" class="input-icon-btn mic-btn" title="Voice input">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+              </button>
+              <button id="send-btn" class="input-icon-btn send-btn" title="Send" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 2L11 13" />
+                  <path d="M22 2L15 22 11 13 2 9 22 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p class="input-disclaimer">Jiyu can make mistakes. Consider checking important info.</p>
+        </div>
+      </footer>
+    </div>
   </div>
 
   <!-- ============ ONBOARDING MODAL ============ -->
   <div id="onboarding-modal" class="modal-overlay" style="display:none">
-    <div class="modal-card">
-      <div class="modal-sparkle">✨</div>
-      <h2>Hey there!</h2>
-      <p>I'm <strong>Jiyu</strong>, your AI best friend. What should I call you?</p>
-      <div class="modal-input-group">
-        <input type="text" id="name-input" placeholder="Your name..." autocomplete="off" />
-        <button id="name-submit-btn" class="primary-btn">Let's go!</button>
+    <div class="modal-card onboarding-card">
+      <div class="onboarding-icon">
+        <div class="logo-mark-lg"><span>J</span></div>
+      </div>
+      <h2>Welcome to Jiyu</h2>
+      <p>I'm your AI companion. What should I call you?</p>
+      <div class="onboarding-input-group">
+        <input type="text" id="name-input" placeholder="Enter your name" autocomplete="off" />
+        <button id="name-submit-btn" class="btn-primary">
+          <span>Continue</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -146,64 +247,73 @@
     <div class="modal-card settings-card">
       <div class="modal-header">
         <h2>Settings</h2>
-        <button id="settings-close-btn" class="icon-btn-sm">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="settings-close-btn" class="close-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       </div>
       <div class="settings-body">
-        <div class="settings-group">
-          <label for="gemini-key-input">Gemini API Key</label>
-          <div class="key-input-wrapper">
-            <input type="password" id="gemini-key-input" placeholder="Enter your Gemini API key" />
-            <button id="toggle-gemini-key" class="icon-btn-sm" title="Show/hide key">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </button>
+        <div class="settings-section">
+          <h3 class="settings-label">API Keys</h3>
+          <div class="settings-field">
+            <label for="gemini-key-input">Gemini API Key</label>
+            <div class="field-input-row">
+              <input type="password" id="gemini-key-input" placeholder="sk-..." />
+              <button id="toggle-gemini-key" class="field-toggle" title="Show/hide">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="settings-field">
+            <label for="elevenlabs-key-input">ElevenLabs API Key <span class="badge">Optional</span></label>
+            <div class="field-input-row">
+              <input type="password" id="elevenlabs-key-input" placeholder="For premium voice" />
+              <button id="toggle-elevenlabs-key" class="field-toggle" title="Show/hide">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
-        <div class="settings-group">
-          <label for="elevenlabs-key-input">ElevenLabs API Key <span class="optional-badge">Optional</span></label>
-          <div class="key-input-wrapper">
-            <input type="password" id="elevenlabs-key-input" placeholder="For premium voice output" />
-            <button id="toggle-elevenlabs-key" class="icon-btn-sm" title="Show/hide key">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </button>
+        <div class="settings-section">
+          <h3 class="settings-label">Voice</h3>
+          <div class="settings-field">
+            <label for="elevenlabs-voice-select">Voice Model</label>
+            <select id="elevenlabs-voice-select" disabled>
+              <option value="">Add ElevenLabs key first</option>
+            </select>
+          </div>
+          <div class="settings-field">
+            <label>Output Engine</label>
+            <div class="toggle-group">
+              <label class="toggle-option">
+                <input type="radio" name="voice-engine" value="browser" checked />
+                <span class="toggle-label">Browser</span>
+              </label>
+              <label class="toggle-option">
+                <input type="radio" name="voice-engine" value="elevenlabs" />
+                <span class="toggle-label">ElevenLabs</span>
+              </label>
+            </div>
           </div>
         </div>
-        <div class="settings-group">
-          <label for="elevenlabs-voice-select">ElevenLabs Voice</label>
-          <select id="elevenlabs-voice-select" disabled>
-            <option value="">Add ElevenLabs key to load voices</option>
-          </select>
-        </div>
-        <div class="settings-group">
-          <label>Voice Output Engine</label>
-          <div class="radio-group">
-            <label class="radio-label">
-              <input type="radio" name="voice-engine" value="browser" checked />
-              <span>Browser (Free)</span>
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="voice-engine" value="elevenlabs" />
-              <span>ElevenLabs (Premium)</span>
-            </label>
+        <div class="settings-section">
+          <h3 class="settings-label">Profile</h3>
+          <div class="settings-field">
+            <label for="user-name-settings">Display Name</label>
+            <input type="text" id="user-name-settings" placeholder="Your name" />
           </div>
-        </div>
-        <div class="settings-group">
-          <label for="user-name-settings">Your Name</label>
-          <input type="text" id="user-name-settings" placeholder="What should Jiyu call you?" />
         </div>
         <div class="settings-actions">
-          <button id="save-settings-btn" class="primary-btn">Save Settings</button>
-          <button id="clear-data-btn" class="danger-btn">Clear All Data</button>
+          <button id="save-settings-btn" class="btn-primary">Save changes</button>
+          <button id="clear-data-btn" class="btn-danger">Reset all data</button>
         </div>
       </div>
     </div>
@@ -216,7 +326,6 @@
   <script src="src/auth.js"></script>
   <script src="src/app.js"></script>
 
-  <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

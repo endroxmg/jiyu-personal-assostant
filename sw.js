@@ -2,7 +2,7 @@
    JIYU — Service Worker (PWA)
    ============================================ */
 
-const CACHE_NAME = 'jiyu-cache-v1';
+const CACHE_NAME = 'jiyu-cache-v2';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
