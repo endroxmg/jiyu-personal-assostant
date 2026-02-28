@@ -1,18 +1,22 @@
 /* ============================================
-   JIYU — Main App Controller v3
+   JIYU — Main App Controller v4
+   Loading screen · Auto-new-chat · Conversations
    ============================================ */
 
 const JiyuApp = (() => {
     const $ = (id) => document.getElementById(id);
 
     // DOM
+    const loadingScreen = $('loading-screen');
     const loginScreen = $('login-screen');
     const chatScreen = $('chat-screen');
     const guestBtn = $('guest-btn');
     const sidebar = $('sidebar');
     const sidebarToggle = $('sidebar-toggle');
     const newChatBtn = $('new-chat-btn');
+    const sidebarChats = $('sidebar-chats');
     const welcomeState = $('welcome-state');
+    const welcomeGreeting = $('welcome-greeting');
     const messagesContainer = $('messages');
     const chatContainer = $('chat-container');
     const userInput = $('user-input');
@@ -21,7 +25,6 @@ const JiyuApp = (() => {
     const typingIndicator = $('typing-indicator');
     const voiceToggleBtn = $('voice-toggle-btn');
     const settingsBtn = $('settings-btn');
-    const signoutBtn = $('signout-btn');
     const onboardingModal = $('onboarding-modal');
     const settingsModal = $('settings-modal');
     const nameInput = $('name-input');
@@ -37,19 +40,29 @@ const JiyuApp = (() => {
     const toggleElevenLabsKey = $('toggle-elevenlabs-key');
 
     let isProcessing = false;
+    let currentChatId = null;
 
     function init() {
         JiyuAuth.init();
         bindEvents();
         updateVoiceUI();
-
-        if (JiyuAuth.isLoggedIn()) {
-            showChatScreen();
-        } else {
-            showLoginScreen();
-        }
-
+        playLoadingScreen();
         if (window.speechSynthesis) window.speechSynthesis.getVoices();
+    }
+
+    // --- Loading Screen ---
+    function playLoadingScreen() {
+        setTimeout(() => {
+            loadingScreen.classList.add('done');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                if (JiyuAuth.isLoggedIn()) {
+                    showChatScreen();
+                } else {
+                    showLoginScreen();
+                }
+            }, 600);
+        }, 2800);
     }
 
     function bindEvents() {
@@ -66,28 +79,23 @@ const JiyuApp = (() => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
         });
 
-        // Auto-resize + send button state
         userInput.addEventListener('input', () => {
             userInput.style.height = 'auto';
-            userInput.style.height = Math.min(userInput.scrollHeight, 160) + 'px';
+            userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
             sendBtn.disabled = !userInput.value.trim();
         });
 
         // Suggestion chips
-        document.querySelectorAll('.suggestion-chip').forEach(chip => {
+        document.querySelectorAll('.chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 const msg = chip.dataset.msg;
-                if (msg) {
-                    userInput.value = msg;
-                    sendBtn.disabled = false;
-                    handleSend();
-                }
+                if (msg) { userInput.value = msg; sendBtn.disabled = false; handleSend(); }
             });
         });
 
         // Mic
         micBtn.addEventListener('click', toggleMic);
-        JiyuVoice.onListeningChange((listening) => { micBtn.classList.toggle('listening', listening); });
+        JiyuVoice.onListeningChange((listening) => micBtn.classList.toggle('listening', listening));
 
         // Voice toggle
         voiceToggleBtn.addEventListener('click', toggleVoiceOutput);
@@ -100,12 +108,8 @@ const JiyuApp = (() => {
         clearDataBtn.addEventListener('click', clearAllData);
 
         // Key toggles
-        toggleGeminiKey.addEventListener('click', () => {
-            geminiKeyInput.type = geminiKeyInput.type === 'password' ? 'text' : 'password';
-        });
-        toggleElevenLabsKey.addEventListener('click', () => {
-            elevenLabsKeyInput.type = elevenLabsKeyInput.type === 'password' ? 'text' : 'password';
-        });
+        toggleGeminiKey.addEventListener('click', () => { geminiKeyInput.type = geminiKeyInput.type === 'password' ? 'text' : 'password'; });
+        toggleElevenLabsKey.addEventListener('click', () => { elevenLabsKeyInput.type = elevenLabsKeyInput.type === 'password' ? 'text' : 'password'; });
 
         // ElevenLabs voice load
         elevenLabsKeyInput.addEventListener('change', async () => {
@@ -115,7 +119,6 @@ const JiyuApp = (() => {
             }
         });
 
-        // Voice engine radios
         document.querySelectorAll('input[name="voice-engine"]').forEach(r => {
             r.addEventListener('change', (e) => JiyuMemory.setVoiceEngine(e.target.value));
         });
@@ -124,10 +127,7 @@ const JiyuApp = (() => {
         nameSubmitBtn.addEventListener('click', handleNameSubmit);
         nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleNameSubmit(); });
 
-        // Sign out
-        signoutBtn.addEventListener('click', () => { JiyuAuth.signOut(); showLoginScreen(); });
-
-        // Close sidebar on mobile when clicking outside
+        // Mobile close sidebar
         document.addEventListener('click', (e) => {
             if (window.innerWidth <= 768 && !sidebar.classList.contains('collapsed') &&
                 !sidebar.contains(e.target) && e.target !== sidebarToggle && !sidebarToggle.contains(e.target)) {
@@ -140,25 +140,23 @@ const JiyuApp = (() => {
     function showLoginScreen() {
         loginScreen.classList.add('active');
         chatScreen.classList.remove('active');
-        messagesContainer.innerHTML = '';
     }
 
     function showChatScreen() {
         loginScreen.classList.remove('active');
         chatScreen.classList.add('active');
 
-        const user = JiyuAuth.getCurrentUser();
-        if (user && user.provider === 'google') signoutBtn.style.display = 'flex';
-
-        // Collapse sidebar on mobile
         if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
-
-        loadMessages();
 
         if (!JiyuMemory.isOnboardingDone()) {
             showOnboarding();
+        } else {
+            // Auto-start a new conversation every session
+            startNewChat();
+            updateWelcomeGreeting();
         }
 
+        renderSidebarChats();
         userInput.focus();
     }
 
@@ -176,58 +174,107 @@ const JiyuApp = (() => {
         JiyuMemory.setOnboardingDone();
         onboardingModal.style.display = 'none';
 
-        const greeting = `Heyy ${name}! 🎉 I'm so happy to meet you! I'm Jiyu — think of me as your AI best friend. I'm here to chat, help, brainstorm, vent with, or just hang out. No judgement, no formalities, just us.\n\nSo, what's on your mind? 💜`;
+        startNewChat();
+        updateWelcomeGreeting();
+
+        const greeting = `Heyyy ${name}! 😊 I'm Jiyu — your AI bestie. Ask me anything, vent, brainstorm, or just chat. I'm all yours!\n\nSo, what's up?`;
         hideWelcomeState();
         addJiyuMessage(greeting);
-        JiyuMemory.saveMessage('assistant', greeting);
+        saveCurrentMessage('assistant', greeting);
         JiyuVoice.speak(greeting);
     }
 
-    // --- Messages ---
-    function loadMessages() {
-        messagesContainer.innerHTML = '';
-        const history = JiyuMemory.getConversations();
+    function updateWelcomeGreeting() {
+        const name = JiyuMemory.getUserName();
+        if (name && welcomeGreeting) {
+            welcomeGreeting.textContent = `Heyyy ${name}, what's up? ✨`;
+        }
+    }
 
-        if (history.length === 0) {
-            showWelcomeState();
+    // --- Conversations ---
+    function generateChatId() {
+        return 'chat_' + Date.now();
+    }
+
+    function startNewChat() {
+        currentChatId = generateChatId();
+        messagesContainer.innerHTML = '';
+        showWelcomeState();
+        updateWelcomeGreeting();
+        renderSidebarChats();
+    }
+
+    function saveCurrentMessage(role, content) {
+        JiyuMemory.saveMessage(role, content, currentChatId);
+    }
+
+    function renderSidebarChats() {
+        const allChats = JiyuMemory.getAllChatIds();
+        sidebarChats.innerHTML = '';
+
+        if (allChats.length === 0) {
+            sidebarChats.innerHTML = '<p class="sb-empty">No conversations yet</p>';
             return;
         }
 
+        allChats.reverse().forEach(chatId => {
+            const msgs = JiyuMemory.getConversationsById(chatId);
+            if (msgs.length === 0) return;
+
+            const firstUserMsg = msgs.find(m => m.role === 'user');
+            const label = firstUserMsg ? firstUserMsg.content.substring(0, 35) + (firstUserMsg.content.length > 35 ? '...' : '') : 'New chat';
+
+            const item = document.createElement('div');
+            item.className = `sb-chat-item ${chatId === currentChatId ? 'active' : ''}`;
+            item.textContent = label;
+            item.addEventListener('click', () => loadChat(chatId));
+            sidebarChats.appendChild(item);
+        });
+    }
+
+    function loadChat(chatId) {
+        currentChatId = chatId;
+        messagesContainer.innerHTML = '';
         hideWelcomeState();
-        history.forEach(msg => {
+
+        const msgs = JiyuMemory.getConversationsById(chatId);
+        msgs.forEach(msg => {
             renderMessage(msg.role === 'user' ? 'user' : 'jiyu', msg.content, false);
         });
+
+        renderSidebarChats();
         scrollToBottom();
     }
 
+    // --- Messages ---
     function showWelcomeState() { if (welcomeState) welcomeState.style.display = 'flex'; }
     function hideWelcomeState() { if (welcomeState) welcomeState.style.display = 'none'; }
 
     function renderMessage(type, content, animate = true) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${type}`;
-        if (!animate) msgDiv.style.animation = 'none';
+        const div = document.createElement('div');
+        div.className = `message ${type}`;
+        if (!animate) div.style.animation = 'none';
 
-        const sender = document.createElement('div');
-        sender.className = 'msg-sender';
+        const header = document.createElement('div');
+        header.className = 'msg-header';
+
         const dot = document.createElement('span');
-        dot.className = 'msg-sender-dot';
-        sender.appendChild(dot);
-        const label = document.createTextNode(type === 'jiyu' ? ' Jiyu' : ` ${JiyuMemory.getUserName() || 'You'}`);
-        sender.appendChild(label);
+        dot.className = 'msg-dot';
+
+        const name = document.createElement('span');
+        name.className = 'msg-name';
+        name.textContent = type === 'jiyu' ? 'Jiyu' : (JiyuMemory.getUserName() || 'You');
+
+        header.appendChild(dot);
+        header.appendChild(name);
 
         const body = document.createElement('div');
         body.className = 'msg-body';
+        body.innerHTML = type === 'jiyu' ? formatMarkdown(content) : escapeHtml(content);
 
-        if (type === 'jiyu') {
-            body.innerHTML = formatMarkdown(content);
-        } else {
-            body.textContent = content;
-        }
-
-        msgDiv.appendChild(sender);
-        msgDiv.appendChild(body);
-        messagesContainer.appendChild(msgDiv);
+        div.appendChild(header);
+        div.appendChild(body);
+        messagesContainer.appendChild(div);
 
         if (animate) scrollToBottom();
     }
@@ -244,7 +291,9 @@ const JiyuApp = (() => {
         hideWelcomeState();
 
         addUserMessage(text);
-        JiyuMemory.saveMessage('user', text);
+        saveCurrentMessage('user', text);
+        renderSidebarChats();
+
         userInput.value = '';
         userInput.style.height = 'auto';
         sendBtn.disabled = true;
@@ -253,13 +302,14 @@ const JiyuApp = (() => {
         showTyping(true);
 
         try {
-            const history = JiyuMemory.getRecentHistory(20);
+            const history = JiyuMemory.getRecentHistoryById(currentChatId, 20);
             const contextHistory = history.slice(0, -1);
             const response = await JiyuGemini.sendMessage(text, contextHistory);
 
             showTyping(false);
             addJiyuMessage(response);
-            JiyuMemory.saveMessage('assistant', response);
+            saveCurrentMessage('assistant', response);
+            renderSidebarChats();
             JiyuVoice.speak(response);
         } catch (error) {
             showTyping(false);
@@ -270,13 +320,6 @@ const JiyuApp = (() => {
 
         isProcessing = false;
         userInput.focus();
-    }
-
-    function startNewChat() {
-        JiyuMemory.clearConversations();
-        messagesContainer.innerHTML = '';
-        showWelcomeState();
-        showToast('New chat started', 'success');
     }
 
     // --- Typing ---
@@ -291,14 +334,14 @@ const JiyuApp = (() => {
             JiyuVoice.stopListening();
         } else {
             if (!JiyuVoice.isRecognitionSupported()) {
-                showToast('Voice input not supported in this browser', 'error');
+                showToast('Voice input not supported', 'error');
                 return;
             }
             JiyuVoice.startListening((text, isFinal) => {
                 userInput.value = text;
                 sendBtn.disabled = !text.trim();
                 userInput.style.height = 'auto';
-                userInput.style.height = Math.min(userInput.scrollHeight, 160) + 'px';
+                userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
                 if (isFinal) handleSend();
             });
         }
@@ -309,15 +352,14 @@ const JiyuApp = (() => {
         JiyuMemory.setVoiceEnabled(enabled);
         updateVoiceUI();
         if (!enabled) JiyuVoice.stopCurrentAudio();
-        showToast(enabled ? 'Voice enabled' : 'Voice muted', 'success');
+        showToast(enabled ? 'Voice on' : 'Voice off', 'success');
     }
 
     function updateVoiceUI() {
         const enabled = JiyuMemory.isVoiceEnabled();
-        const onIcon = document.getElementById('voice-on-icon');
-        const offIcon = document.getElementById('voice-off-icon');
-        if (enabled) { onIcon.style.display = 'block'; offIcon.style.display = 'none'; voiceToggleBtn.classList.add('active'); }
-        else { onIcon.style.display = 'none'; offIcon.style.display = 'block'; voiceToggleBtn.classList.remove('active'); }
+        $('voice-on-icon').style.display = enabled ? 'block' : 'none';
+        $('voice-off-icon').style.display = enabled ? 'none' : 'block';
+        voiceToggleBtn.classList.toggle('active', enabled);
     }
 
     // --- Settings ---
@@ -325,12 +367,9 @@ const JiyuApp = (() => {
         geminiKeyInput.value = JiyuMemory.getGeminiKey();
         elevenLabsKeyInput.value = JiyuMemory.getElevenLabsKey();
         userNameSettings.value = JiyuMemory.getUserName();
-
         const engine = JiyuMemory.getVoiceEngine();
         document.querySelectorAll('input[name="voice-engine"]').forEach(r => r.checked = r.value === engine);
-
         if (JiyuMemory.getElevenLabsKey()) loadElevenLabsVoices();
-
         settingsModal.style.display = 'flex';
     }
 
@@ -341,49 +380,55 @@ const JiyuApp = (() => {
         select.innerHTML = '<option value="">Loading...</option>';
         select.disabled = true;
         const voices = await JiyuVoice.fetchElevenLabsVoices();
-        if (voices.length === 0) { select.innerHTML = '<option value="">No voices found</option>'; return; }
+        if (voices.length === 0) { select.innerHTML = '<option value="">No voices</option>'; return; }
         select.innerHTML = '';
-        const currentVoice = JiyuMemory.getElevenLabsVoice();
+        const cur = JiyuMemory.getElevenLabsVoice();
         voices.forEach(v => {
             const opt = document.createElement('option');
             opt.value = v.voice_id;
             opt.textContent = `${v.name} — ${v.labels?.accent || ''} ${v.labels?.gender || ''}`.trim();
-            if (v.voice_id === currentVoice) opt.selected = true;
+            if (v.voice_id === cur) opt.selected = true;
             select.appendChild(opt);
         });
         select.disabled = false;
     }
 
     function saveSettings() {
-        const geminiKey = geminiKeyInput.value.trim();
-        const elevenLabsKey = elevenLabsKeyInput.value.trim();
-        const userName = userNameSettings.value.trim();
-        const voiceEngine = document.querySelector('input[name="voice-engine"]:checked')?.value || 'browser';
-        const selectedVoice = elevenLabsVoiceSelect.value;
+        const gk = geminiKeyInput.value.trim();
+        const ek = elevenLabsKeyInput.value.trim();
+        const un = userNameSettings.value.trim();
+        const ve = document.querySelector('input[name="voice-engine"]:checked')?.value || 'browser';
+        const sv = elevenLabsVoiceSelect.value;
 
-        if (geminiKey) JiyuMemory.setGeminiKey(geminiKey);
-        if (elevenLabsKey) JiyuMemory.setElevenLabsKey(elevenLabsKey);
-        if (userName) JiyuMemory.setUserName(userName);
-        JiyuMemory.setVoiceEngine(voiceEngine);
-        if (selectedVoice) JiyuMemory.setElevenLabsVoice(selectedVoice);
+        if (gk) JiyuMemory.setGeminiKey(gk);
+        if (ek) JiyuMemory.setElevenLabsKey(ek);
+        if (un) { JiyuMemory.setUserName(un); updateWelcomeGreeting(); }
+        JiyuMemory.setVoiceEngine(ve);
+        if (sv) JiyuMemory.setElevenLabsVoice(sv);
 
         closeSettings();
-        showToast('Settings saved', 'success');
+        showToast('Saved', 'success');
     }
 
     function clearAllData() {
-        if (confirm('Clear all data including conversations and settings?')) {
+        if (confirm('Clear all data?')) {
             JiyuMemory.clearAll();
             messagesContainer.innerHTML = '';
             closeSettings();
-            showToast('All data cleared', 'success');
-            setTimeout(() => showLoginScreen(), 800);
+            showToast('Data cleared', 'success');
+            setTimeout(() => { loginScreen.classList.add('active'); chatScreen.classList.remove('active'); }, 600);
         }
     }
 
     // --- Helpers ---
     function scrollToBottom() {
         requestAnimationFrame(() => { chatContainer.scrollTop = chatContainer.scrollHeight; });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     function formatMarkdown(text) {
@@ -412,7 +457,7 @@ const JiyuApp = (() => {
         toast.textContent = message;
         document.body.appendChild(toast);
         requestAnimationFrame(() => toast.classList.add('show'));
-        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2500);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2200);
     }
 
     document.addEventListener('DOMContentLoaded', init);

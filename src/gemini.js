@@ -3,8 +3,9 @@
    ============================================ */
 
 const JiyuGemini = (() => {
-    const DEFAULT_KEY = 'AIzaSyDNtrDtAhii2mXGdi2_N5xc6TssS0pktjM';
-    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    const DEFAULT_KEY = ''; // Set your key in Settings
+    const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
+    const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
 
     function getSystemPrompt(userName) {
         const name = userName || 'friend';
@@ -42,9 +43,16 @@ CONTEXT:
     }
 
     async function sendMessage(userMessage, conversationHistory) {
-        const apiKey = JiyuMemory.getGeminiKey() || DEFAULT_KEY;
+        const savedKey = JiyuMemory.getGeminiKey();
+        const apiKey = savedKey || DEFAULT_KEY;
         const userName = JiyuMemory.getUserName();
         const systemPrompt = getSystemPrompt(userName);
+
+        console.log('Using Gemini key:', apiKey ? (apiKey.substring(0, 10) + '...') : 'NONE');
+
+        if (!apiKey) {
+            throw new Error('No API key set. Add your Gemini key in Settings.');
+        }
 
         // Build conversation contents for Gemini
         const contents = [];
@@ -84,33 +92,62 @@ CONTEXT:
             ]
         };
 
-        try {
-            const response = await fetch(`${API_URL}?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
-            });
+        let lastError = null;
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                if (response.status === 400 || response.status === 403) {
-                    throw new Error('Invalid API key. Check your Gemini key in Settings.');
+        for (const model of MODELS) {
+            try {
+                const url = `${BASE_URL}${model}:generateContent?key=${apiKey}`;
+                console.log(`Trying model: ${model}`);
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const apiMsg = errorData?.error?.message || '';
+                    console.warn(`${model} failed (${response.status}): ${apiMsg}`);
+
+                    // If rate limited, try next model
+                    if (response.status === 429) {
+                        lastError = new Error(`Rate limited on ${model}`);
+                        continue;
+                    }
+                    if (response.status === 403 && apiMsg.includes('API_KEY')) {
+                        throw new Error('Invalid API key. Check your Gemini key in Settings.');
+                    }
+                    if (apiMsg.includes('leaked')) {
+                        throw new Error('This API key was reported as leaked. Create a new one at aistudio.google.com/apikey');
+                    }
+                    // Other errors — don't fallback, just throw
+                    throw new Error(apiMsg || `API error (${response.status})`);
                 }
-                throw new Error(errorData?.error?.message || `API error (${response.status})`);
+
+                const data = await response.json();
+                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!text) {
+                    lastError = new Error('Empty response');
+                    continue;
+                }
+
+                console.log(`Success with model: ${model}`);
+                return text;
+            } catch (error) {
+                lastError = error;
+                // If it's a non-retryable error, throw immediately
+                if (error.message.includes('API key') || error.message.includes('leaked')) {
+                    throw error;
+                }
+                console.warn(`Model ${model} failed, trying next...`);
             }
-
-            const data = await response.json();
-            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (!text) {
-                throw new Error('Empty response from Gemini');
-            }
-
-            return text;
-        } catch (error) {
-            console.error('Gemini API error:', error);
-            throw error;
         }
+
+        // All models failed
+        console.error('All models failed:', lastError);
+        throw new Error(lastError?.message || 'All models are currently unavailable. Try again in a minute.');
     }
 
     return { sendMessage };
